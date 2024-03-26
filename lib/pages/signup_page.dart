@@ -1,29 +1,46 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class SignupPage extends StatefulWidget {
-  const SignupPage({super.key});
+  const SignupPage({Key? key}) : super(key: key);
 
   @override
-  // ignore: library_private_types_in_public_api
   _SignupPageState createState() => _SignupPageState();
 }
 
 class _SignupPageState extends State<SignupPage> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _emailController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
-  final TextEditingController _addressController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+  TextEditingController();
 
-  void _signup() {
-    print('Signing up with the following details:');
-    print('Name: ${_nameController.text}');
-    print('Email: ${_emailController.text}');
-    print('Phone: ${_phoneController.text}');
-    print('Address: ${_addressController.text}');
-    print('Password: ${_passwordController.text}');
-    print('Confirm Password: ${_confirmPasswordController.text}');
+  FirebaseAuth _auth = FirebaseAuth.instance;
+  FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  void _signup() async {
+    try {
+      UserCredential userCredential =
+      await _auth.createUserWithEmailAndPassword(
+        email: _emailController.text,
+        password: _passwordController.text,
+      );
+
+      // Registration successful, store additional user data in Firestore
+      await _firestore.collection('users').doc(userCredential.user!.uid).set({
+        'name': _nameController.text,
+        'email': _emailController.text,
+        // Add more fields as needed
+      });
+
+      // Registration successful, you can navigate to the next screen or perform any other action here
+      print('Registration successful: ${userCredential.user}');
+    } catch (e) {
+      // Registration failed, handle the error
+      print('Registration failed: $e');
+      // You can show an error message to the user or handle the error in any other way
+    }
   }
 
   @override
@@ -31,14 +48,18 @@ class _SignupPageState extends State<SignupPage> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: Colors.blueGrey,
-        title: const Text('Sign Up',style: TextStyle(color: Colors.white),),
-        leading: IconButton(onPressed: (){
-          Navigator.pop(context);
-        }, icon: const Icon(Icons.arrow_back_ios,color: Colors.white,)),
+        title: const Text(
+          'Sign Up',
+          style: TextStyle(color: Colors.white),
+        ),
+        leading: IconButton(
+          onPressed: () {
+            Navigator.pop(context);
+          },
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+        ),
       ),
       body: Container(
-        decoration: const BoxDecoration(
-        ),
         child: SafeArea(
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(16.0),
@@ -54,23 +75,14 @@ class _SignupPageState extends State<SignupPage> {
                   keyboardType: TextInputType.emailAddress,
                 ),
                 TextFormField(
-                  controller: _phoneController,
-                  decoration: const InputDecoration(labelText: 'Phone Number'),
-                  keyboardType: TextInputType.phone,
-                ),
-                TextFormField(
-                  controller: _addressController,
-                  decoration: const InputDecoration(labelText: 'Address', alignLabelWithHint: true),
-                  maxLines: 3,
-                ),
-                TextFormField(
                   controller: _passwordController,
                   decoration: const InputDecoration(labelText: 'Password'),
                   obscureText: true,
                 ),
                 TextFormField(
                   controller: _confirmPasswordController,
-                  decoration: const InputDecoration(labelText: 'Confirm Password'),
+                  decoration:
+                  const InputDecoration(labelText: 'Confirm Password'),
                   obscureText: true,
                 ),
 
@@ -81,9 +93,12 @@ class _SignupPageState extends State<SignupPage> {
                   child: ElevatedButton(
                     onPressed: _signup,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blueGrey
+                      backgroundColor: Colors.blueGrey,
                     ),
-                    child: const Text("Register",style: TextStyle(color: Colors.white),),
+                    child: const Text(
+                      "Register",
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
                 ),
                 TextButton(

@@ -1,14 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:spices_world/pages/home_page.dart';
 import 'package:spices_world/pages/signup_page.dart';
 
-
-
 class LoginPage extends StatefulWidget {
-  const LoginPage({super.key});
+  const LoginPage({Key? key}) : super(key: key);
 
   @override
-  // ignore: library_private_types_in_public_api
   _LoginPageState createState() => _LoginPageState();
 }
 
@@ -16,8 +14,42 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
 
-  void _login() {
-    Navigator.push(context, MaterialPageRoute(builder: (context) => const HomeScreen()));
+  FirebaseAuth _auth = FirebaseAuth.instance;
+
+  Future<void> _login() async {
+    try {
+      UserCredential userCredential = await _auth.signInWithEmailAndPassword(
+        email: _emailController.text,
+        password: _passwordController.text,
+      );
+
+      // Login successful, navigate to home screen
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (context) => HomeScreen()),
+      );
+    } catch (e) {
+      // Login failed, handle the error
+      print('Login failed: $e');
+      // Show an error message to the user or handle the error in any other way
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text('Login Failed'),
+            content: Text('Invalid email or password. Please try again.'),
+            actions: <Widget>[
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text('OK'),
+              ),
+            ],
+          );
+        },
+      );
+    }
   }
 
   @override
@@ -68,19 +100,23 @@ class _LoginPageState extends State<LoginPage> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.blueGrey,
                     ),
-                    child:  const Text('LOGIN',style: TextStyle(color: Colors.white),),
+                    child: const Text(
+                      'LOGIN',
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
                 ),
-                const SizedBox(height: 10,),
+                const SizedBox(height: 10),
                 TextButton(
                   onPressed: () {
-                    Navigator.push(context, MaterialPageRoute(builder: (context) =>const SignupPage()));
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => SignupPage()),
+                    );
                   },
                   child: const Text(
-                    "Don't have an account?"
-                        " Create an account",
-                    style: TextStyle(color: Colors.black,fontSize: 12),
-
+                    "Don't have an account? Create an account",
+                    style: TextStyle(color: Colors.black, fontSize: 12),
                   ),
                 ),
               ],
@@ -91,3 +127,4 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 }
+
